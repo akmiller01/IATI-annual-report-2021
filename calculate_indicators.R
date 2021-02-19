@@ -142,12 +142,14 @@ for(idx in 1:length(xml_files)){
       for(h_scope in humanitarian_scopes){
         h_scope_vocab = xmlGetAttr(h_scope,"vocabulary")
         h_scope_code = xmlGetAttr(h_scope,"code")
-        if(length(h_scope_vocab)>0 & length(h_scope_code)>0 & !is.na(h_scope_code) & h_scope_code!=""){
-          if(h_scope_vocab=="1-2"){
-            unique_emergencies = unique(c(unique_emergencies, h_scope_code))
-          }
-          if(h_scope_vocab=="2-1"){
-            unique_appeals = unique(c(unique_appeals, h_scope_code))
+        if(length(h_scope_vocab)>0 & length(h_scope_code)>0){
+          if(!is.na(h_scope_code) & h_scope_code!=""){
+            if(h_scope_vocab=="1-2"){
+              unique_emergencies = unique(c(unique_emergencies, h_scope_code))
+            }
+            if(h_scope_vocab=="2-1"){
+              unique_appeals = unique(c(unique_appeals, h_scope_code))
+            }
           }
         }
       }
@@ -494,8 +496,8 @@ length(r_org_by_year[["2020"]])
 length(r_org_by_type[["10"]])
 activity_count
 humanitarian_activity_count
-unique_emergencies
-unique_appeals
+length(unique_emergencies)
+length(unique_appeals)
 activity_using_sdg_count
 length(publishers_using_sdgs)
 unique_sdg_goals
