@@ -374,7 +374,9 @@ for(idx in 1:length(xml_files)){
              t_type %in% c("3","4","D","E","Disbursement","Expenditure")
              ){
             t_currency = gsub(" ","",toupper(t_currency))
-            t_currency = currency_remap[[t_currency]]
+            if(t_currency %in% names(currency_remap)){
+              t_currency = currency_remap[[t_currency]]
+            }
             t_year = as.numeric(substr(t_date,1,4))
             ex_rate = subset(ex_rates,cc==t_currency & year==t_year)$ex.rate
             if(length(ex_rate)>0){
@@ -453,7 +455,9 @@ for(idx in 1:length(xml_files)){
              budget_period_start_iso_date!="" & b_value!="" & b_currency!=""
           ){
             b_currency = gsub(" ","",toupper(b_currency))
-            b_currency = currency_remap[[b_currency]]
+            if(b_currency %in% names(currency_remap)){
+              b_currency = currency_remap[[b_currency]]
+            }
             b_year = as.numeric(substr(budget_period_start_iso_date,1,4))
             ex_rate = subset(ex_rates,cc==b_currency & year==b_year)$ex.rate
             if(length(ex_rate)>0){
