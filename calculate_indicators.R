@@ -89,20 +89,20 @@ for(idx in 1:length(xml_files)){
         if(length(act_sec_percentage)==0){
           act_sec_percentage = "100"
         }
-        tmp_act_sec_df = data.frame(vocab=act_sec_vocab,code=act_sec_code,percentage=act_sec_percentage)
+        tmp_act_sec_df = list(vocab=act_sec_vocab,code=act_sec_code,percentage=act_sec_percentage)
         activity_sector_list[[activity_sector_idx]] = tmp_act_sec_df
         activity_sector_idx = activity_sector_idx + 1
       }
     }
     activity_sector_df = rbindlist(activity_sector_list)
     if("1" %in% activity_sector_df$vocab){
-      activity_sector_df = subset(activity_sector_df,vocab=="1")
+      activity_sector_df = activity_sector_df[which(activity_sector_df$vocab=="1"),]
       activity_sector_df$code = substr(activity_sector_df$code,1,3)
     }else if("2" %in% activity_sector_df$vocab){
-      activity_sector_df = subset(activity_sector_df,vocab=="2")
+      activity_sector_df = activity_sector_df[which(activity_sector_df$vocab=="2"),]
     }
     if(nrow(activity_sector_df)>0){
-      activity_sector_df = subset(activity_sector_df,!is.na(code) & code!="")
+      activity_sector_df = activity_sector_df[which(!is.na(activity_sector_df$code) & activity_sector_df$code!=""),]
       activity_sector_df$percentage = as.numeric(activity_sector_df$percentage)
     }
     # Activity recipients
@@ -119,14 +119,14 @@ for(idx in 1:length(xml_files)){
         if(length(act_recip_percentage)==0){
           act_recip_percentage = "100"
         }
-        tmp_act_recip_df = data.frame(code=act_recip_code,percentage=act_recip_percentage)
+        tmp_act_recip_df = list(code=act_recip_code,percentage=act_recip_percentage)
         activity_recipient_list[[activity_recipient_idx]] = tmp_act_recip_df
         activity_recipient_idx = activity_recipient_idx + 1
       }
     }
     activity_recipient_df = rbindlist(activity_recipient_list)
     if(nrow(activity_recipient_df)>0){
-      activity_recipient_df = subset(activity_recipient_df,!is.na(code) & code!="")
+      activity_recipient_df = activity_recipient_df[which(!is.na(activity_recipient_df$code) & activity_recipient_df$code!=""),]
       activity_recipient_df$code = toupper(activity_recipient_df$code)
     }
     # Humanitarian flag
@@ -163,11 +163,12 @@ for(idx in 1:length(xml_files)){
       unique_iati_identifiers = unique(c(unique_iati_identifiers, iati_identifier))
     }
     # Activity date
-    if(length(getNodeSet(activity,"./activity-date/@iso-date"))==0){
+    activity_date_elems = getNodeSet(activity,"./activity-date/@iso-date")
+    if(length(activity_date_elems)==0){
       activity_date = NA
       activity_year = NA
     }else{
-      activity_dates = anydate(sapply(getNodeSet(activity,"./activity-date/@iso-date"),`[[`,"iso-date"))
+      activity_dates = anydate(sapply(activity_date_elems,`[[`,"iso-date"))
       activity_date = mean(activity_dates)
       activity_year = as.character(year(activity_date))
     }
@@ -272,17 +273,17 @@ for(idx in 1:length(xml_files)){
             if(length(trans_sec_percentage)==0){
               trans_sec_percentage = 100
             }
-            tmp_trans_sec_df = data.frame(vocab=trans_sec_vocab,code=trans_sec_code,percentage=trans_sec_percentage)
+            tmp_trans_sec_df = list(vocab=trans_sec_vocab,code=trans_sec_code,percentage=trans_sec_percentage)
             transaction_sector_list[[transaction_sector_idx]] = tmp_trans_sec_df
             transaction_sector_idx = transaction_sector_idx + 1
           }
         }
         transaction_sector_df = rbindlist(transaction_sector_list)
         if("1" %in% transaction_sector_df$vocab){
-          transaction_sector_df = subset(transaction_sector_df,vocab=="1")
+          transaction_sector_df = transaction_sector_df[which(transaction_sector_df$vocab=="1"),]
           transaction_sector_df$code = substr(transaction_sector_df$code,1,3)
         }else if("2" %in% transaction_sector_df$vocab){
-          transaction_sector_df = subset(transaction_sector_df,vocab=="2")
+          transaction_sector_df = transaction_sector_df[which(transaction_sector_df$vocab=="2"),]
         }
         if(nrow(transaction_sector_df)>0){
           transaction_sector_df = subset(transaction_sector_df,!is.na(code) & code!="")
@@ -303,14 +304,14 @@ for(idx in 1:length(xml_files)){
               trans_recip_code = NA
             }
             trans_recip_percentage = "100"
-            tmp_trans_recip_df = data.frame(code=trans_recip_code,percentage=trans_recip_percentage)
+            tmp_trans_recip_df = list(code=trans_recip_code,percentage=trans_recip_percentage)
             transaction_recipient_list[[transaction_recipient_idx]] = tmp_trans_recip_df
             transaction_recipient_idx = transaction_recipient_idx + 1
           }
         }
         transaction_recipient_df = rbindlist(transaction_recipient_list)
         if(nrow(transaction_recipient_df)>0){
-          transaction_recipient_df = subset(transaction_recipient_df,!is.na(code) & code!="")
+          transaction_recipient_df = transaction_recipient_df[which(!is.na(transaction_recipient_df$code) & transaction_recipient_df$code!=""),]
           transaction_recipient_df$code = toupper(transaction_recipient_df$code)
         }
         if(nrow(transaction_recipient_df)==0){
@@ -318,10 +319,11 @@ for(idx in 1:length(xml_files)){
         }
         
         # Transaction type
-        if(length(getNodeSet(transaction,"./transaction-type/@code"))==0){
+        t_type_code_elems = getNodeSet(transaction,"./transaction-type/@code")
+        if(length(t_type_code_elems)==0){
           t_type = NA
         }else{
-          t_type = getNodeSet(transaction,"./transaction-type/@code")[[1]][["code"]]
+          t_type = t_type_code_elems[[1]][["code"]]
         }
         # Transaction count by transaction type
         if(!is.na(t_type) & t_type!=""){
@@ -332,11 +334,12 @@ for(idx in 1:length(xml_files)){
           }
         }
         # Transaction date
-        if(length(getNodeSet(transaction,"./transaction-date/@iso-date"))==0){
+        t_date_code_elems = getNodeSet(transaction,"./transaction-date/@iso-date")
+        if(length(t_date_code_elems)==0){
           t_date = NULL
           t_year = NA
         }else{
-          t_date = getNodeSet(transaction,"./transaction-date/@iso-date")[[1]][["iso-date"]]
+          t_date = t_date_code_elems[[1]][["iso-date"]]
           t_year = as.numeric(substr(t_date,1,4))
         }
         # Transaction count by type and year
