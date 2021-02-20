@@ -28,7 +28,7 @@ for(cc in ccs){
 }
 
 # Find XML files
-xml_files = list.files(path="~/git/IATI-Better-Refresher/data",full.names=T)
+xml_files = list.files(path="~/git/IATI-Registry-Refresher/data",full.names=T,recursive=T)
 
 # Setup indicator holding vars
 unique_reporting_orgs = c()
@@ -547,5 +547,5 @@ save(
   recipient_spend_2020,
   recipient_budget_2021,
   org_type_spend_2020,
-  file="draft_indicators.RData"
+  file="indicators_feb_22_2020.RData"
 )
