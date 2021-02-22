@@ -144,10 +144,14 @@ for(idx in 1:length(xml_files)){
         if(length(h_scope_vocab)>0 & length(h_scope_code)>0){
           if(!is.na(h_scope_code) & h_scope_code!=""){
             if(h_scope_vocab=="1-2"){
-              unique_emergencies = unique(c(unique_emergencies, h_scope_code))
+              if(!(h_scope_code %in% unique_emergencies)){
+                unique_emergencies = c(unique_emergencies, h_scope_code)
+              }
             }
             if(h_scope_vocab=="2-1"){
-              unique_appeals = unique(c(unique_appeals, h_scope_code))
+              if(!(h_scope_code %in% unique_appeals)){
+                unique_appeals = c(unique_appeals, h_scope_code)
+              }
             }
           }
         }
@@ -158,8 +162,8 @@ for(idx in 1:length(xml_files)){
     if(length(iati_identifier)==0){
       iati_identifier = NA
     }
-    if(!is.na(iati_identifier) & iati_identifier!=""){
-      unique_iati_identifiers = unique(c(unique_iati_identifiers, iati_identifier))
+    if(!is.na(iati_identifier) & iati_identifier!="" & !(iati_identifier %in% unique_iati_identifiers)){
+      unique_iati_identifiers = c(unique_iati_identifiers, iati_identifier)
     }
     # Activity date
     activity_date_elems = getNodeSet(activity,"./activity-date/@iso-date")
@@ -198,18 +202,22 @@ for(idx in 1:length(xml_files)){
       }
     }
     # Reporting org ref list and reporting org ref by year
-    if(!is.na(reporting_org_ref) & reporting_org_ref!=""){
-      unique_reporting_orgs = unique(c(unique_reporting_orgs,reporting_org_ref))
+    if(!is.na(reporting_org_ref) & reporting_org_ref!="" & !(reporting_org_ref %in% unique_reporting_orgs)){
+      unique_reporting_orgs = c(unique_reporting_orgs,reporting_org_ref)
       if(!is.na(reporting_org_type)){
         if(reporting_org_type %in% names(r_org_by_type)){
-          r_org_by_type[[reporting_org_type]] = unique(c(r_org_by_type[[reporting_org_type]], reporting_org_ref))
+          if(!(reporting_org_ref %in% r_org_by_type[[reporting_org_type]])){
+            r_org_by_type[[reporting_org_type]] = c(r_org_by_type[[reporting_org_type]], reporting_org_ref)
+          }
         }else{
           r_org_by_type[[reporting_org_type]] = c(reporting_org_ref)
         }
       }
       if(!is.na(activity_year)){
         if(activity_year %in% names(r_org_by_year)){
-          r_org_by_year[[activity_year]] = unique(c(r_org_by_year[[activity_year]], reporting_org_ref))
+          if(!(reporting_org_ref %in% r_org_by_year[[activity_year]])){
+            r_org_by_year[[activity_year]] = c(r_org_by_year[[activity_year]], reporting_org_ref)
+          }
         }else{
           r_org_by_year[[activity_year]] = c(reporting_org_ref)
         }
@@ -229,8 +237,8 @@ for(idx in 1:length(xml_files)){
         if(length(tag_code)==0){
           tag_code = NA
         }
-        if(!is.na(tag_code) & tag_code!=""){
-          unique_sdg_goals = unique(c(unique_sdg_goals, tag_code))
+        if(!is.na(tag_code) & tag_code!="" & !(tag_code %in% unique_sdg_goals)){
+          unique_sdg_goals = c(unique_sdg_goals, tag_code)
         }
       }
       # Targets
@@ -239,15 +247,15 @@ for(idx in 1:length(xml_files)){
         if(length(tag_code)==0){
           tag_code = NA
         }
-        if(!is.na(tag_code) & tag_code!=""){
-          unique_sdg_targets = unique(c(unique_sdg_targets, tag_code))
+        if(!is.na(tag_code) & tag_code!="" & !(tag_code %in% unique_sdg_targets)){
+          unique_sdg_targets = c(unique_sdg_targets, tag_code)
         }
       }
     }
     if(using_sdg_tag){
       activity_using_sdg_count = activity_using_sdg_count + 1
-      if(!is.na(reporting_org_ref) & reporting_org_ref!=""){
-        publishers_using_sdgs = unique(c(publishers_using_sdgs, reporting_org_ref))
+      if(!is.na(reporting_org_ref) & reporting_org_ref!="" & !(reporting_org_ref %in% publishers_using_sdgs)){
+        publishers_using_sdgs = c(publishers_using_sdgs, reporting_org_ref)
       }
     }
     # Transactions
