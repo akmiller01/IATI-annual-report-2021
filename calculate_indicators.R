@@ -35,7 +35,6 @@ unique_reporting_orgs = c()
 unique_iati_identifiers = c()
 r_org_by_year = list()
 r_org_by_type = list()
-invalid_combinations = c()
 activity_count = 0
 humanitarian_activity_count = 0
 unique_emergencies = c()
@@ -534,6 +533,7 @@ save(
   unique_emergencies,
   unique_appeals,
   activity_using_sdg_count,
+  publishers_using_sdgs,
   unique_sdg_goals,
   unique_sdg_targets,
   a_count_by_year,
@@ -547,5 +547,5 @@ save(
   recipient_spend_2020,
   recipient_budget_2021,
   org_type_spend_2020,
-  file="indicators_feb_22_2020.RData"
+  file="indicators_feb_22_2021.RData"
 )
