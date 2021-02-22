@@ -452,7 +452,7 @@ for(idx in 1:length(xml_files)){
             b_currency = default_currency
           }
           
-          b_value = as.numeric(gsub(",","",sapply(b_value_elem,xmlValue)))
+          b_value = as.numeric(gsub(",","",sapply(b_value_elem,xmlValue)))[1]
           if(!is.na(budget_period_start_iso_date) & !is.na(b_value) & !is.na(b_currency) &
              budget_period_start_iso_date!="" & b_value!="" & b_currency!=""
           ){
