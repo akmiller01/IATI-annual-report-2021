@@ -24,10 +24,14 @@ length(unique_reporting_orgs)
 # Growth in publishers
 length(unique_reporting_orgs) - length(unique_reporting_orgs_2019)
 # New publishers
-setdiff(unique_reporting_orgs, unique_reporting_orgs_2019)
+new_refs = setdiff(unique_reporting_orgs, unique_reporting_orgs_2019)
+length(new_refs)
+length(setdiff(unique_reporting_orgs_2019, unique_reporting_orgs))
+fwrite(data.frame(new_refs),"new_publishers.csv")
 
 # Total activities
 activity_count
+activity_count - activity_count_2019
 # Past 5 years
 a_count = stack(a_count_by_year)
 setnames(a_count,"ind","year")
@@ -36,6 +40,7 @@ a_count$year = as.numeric(as.character(a_count$year))
 a_count = subset(a_count,year>2014 & year<2021)
 a_count = a_count[order(a_count$year),]
 a_count$cumulative_activities = cumsum(a_count$activities)
+fwrite(a_count,"activities_count.csv")
 a_count_long = melt(a_count,id.vars="year")
 ggplot(a_count_long,aes(x=year,y=value,group=variable,color=variable)) + geom_line() + theme_bw()
 
@@ -59,13 +64,16 @@ t_count = data.table(t_count)[,.(transactions=sum(transactions)),by=.(code)]
 t_count = merge(t_count,t_types,by="code")
 t_count$code = NULL
 t_count = t_count[order(t_count$transactions),]
+fwrite(t_count,"transaction_count.csv")
 t_count$transaction_type = factor(t_count$transaction_type,levels=t_count$transaction_type)
 ggplot(t_count,aes(x=transaction_type,y=transactions)) + geom_bar(stat="identity") + coord_flip() + theme_bw()
 
 # Activity growth
 activity_count - activity_count_2019
 # New activities
-setdiff(unique_iati_identifiers, unique_iati_identifiers_2019)
+new_activities = setdiff(unique_iati_identifiers, unique_iati_identifiers_2019)
+length(new_activities)
+length(setdiff(unique_iati_identifiers_2019,unique_iati_identifiers))
 
 # Activity count with SDG Tags
 activity_using_sdg_count
@@ -89,6 +97,9 @@ humanitarian_activity_count
 humanitarian_activity_count - humanitarian_activity_count_2019
 # Emergencies
 length(unique_emergencies)
+sum(grepl("2020",unique_emergencies))
+emergency_2020 = unique_emergencies[which(grepl("2020",unique_emergencies))]
+fwrite(data.frame(glide=emergency_2020),"emergencies_2020.csv")
 # Appeals
 length(unique_appeals)
 
@@ -109,6 +120,7 @@ sector_spend_clean = data.table(sector_spend_clean)[,.(spend=sum(spend)),by=.(se
 sector_spend_clean = merge(sector_spend_clean,sector_cats,by="sector_code")
 sector_spend_clean$sector_code = NULL
 sector_spend_clean = sector_spend_clean[order(sector_spend_clean$spend),]
+fwrite(sector_spend_clean,"Sector_spend_2020.csv")
 sector_spend_clean$sector_name = factor(sector_spend_clean$sector_name,levels=sector_spend_clean$sector_name)
 ggplot(sector_spend_clean,aes(x=sector_name,y=spend)) + geom_bar(stat="identity") + coord_flip() + theme_bw()
 
@@ -125,6 +137,7 @@ recipient_spend = merge(recipient_spend,recipients,by="recipient_code")
 recipient_spend$recipient_code = NULL
 recipient_spend$spend_billions = recipient_spend$spend/billion
 recipient_spend = recipient_spend[order(-recipient_spend$spend),]
+fwrite(recipient_spend,"Recipient_spend_2020.csv")
 recipient_spend = recipient_spend[1:10,]
 recipient_spend$recipient_name = factor(recipient_spend$recipient_name,levels=rev(recipient_spend$recipient_name))
 ggplot(recipient_spend,aes(x=recipient_name,y=spend_billions)) + geom_bar(stat="identity") + scale_y_continuous(labels=dollar) + coord_flip() + theme_bw()
@@ -138,6 +151,7 @@ recipient_budget = merge(recipient_budget,recipients,by="recipient_code")
 recipient_budget$recipient_code = NULL
 recipient_budget$budget_billions = recipient_budget$budget/billion
 recipient_budget = recipient_budget[order(-recipient_budget$budget),]
+fwrite(recipient_budget,"Recipient_budget_2021.csv")
 recipient_budget = recipient_budget[1:10,]
 recipient_budget$recipient_name = factor(recipient_budget$recipient_name,levels=rev(recipient_budget$recipient_name))
 ggplot(recipient_budget,aes(x=recipient_name,y=budget_billions)) + geom_bar(stat="identity") + scale_y_continuous(labels=dollar) + coord_flip() + theme_bw()
@@ -152,7 +166,28 @@ setnames(org_type_spend,"ind","org_type_code")
 org_type_spend$org_type_code = as.character(org_type_spend$org_type_code)
 org_type_spend = merge(org_type_spend,org_types,by="org_type_code")
 org_type_spend$org_type_code = NULL
+fwrite(org_type_spend,"Org_type_spend_2020.csv")
 org_type_spend$spend_trillions = org_type_spend$spend / trillion
 org_type_spend = org_type_spend[order(org_type_spend$spend),]
 org_type_spend$org_type_name = factor(org_type_spend$org_type_name,levels=org_type_spend$org_type_name)
 ggplot(org_type_spend,aes(x=org_type_name,y=spend_trillions)) + geom_bar(stat="identity") + coord_flip() + theme_bw()
+
+# Extra
+s_total = stack(s_total_by_year)
+setnames(s_total,"ind","year")
+setnames(s_total,"values","total_spend")
+s_total$year = as.numeric(as.character(s_total$year))
+s_total$total_spend = s_total$total_spend/trillion
+s_total = subset(s_total,year>2000 & year<2021)
+s_total = s_total[order(s_total$year),]
+ggplot(s_total,aes(x=year,y=total_spend)) + geom_line() + theme_bw() + labs(y="Spend (trillions)")
+
+b_total_by_year = lapply(b_total_by_year,`[[`,1)
+b_total = stack(b_total_by_year)
+setnames(b_total,"ind","year")
+setnames(b_total,"values","total_budget")
+b_total$year = as.numeric(as.character(b_total$year))
+b_total$total_budget = b_total$total_budget/trillion
+b_total = subset(b_total,year>2000 & year<2021)
+b_total = b_total[order(b_total$year),]
+ggplot(b_total,aes(x=year,y=total_budget)) + geom_line() + theme_bw() + labs(y="Budget (trillions)")
