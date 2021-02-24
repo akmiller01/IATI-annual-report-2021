@@ -102,6 +102,7 @@ emergency_2020 = unique_emergencies[which(grepl("2020",unique_emergencies))]
 fwrite(data.frame(glide=emergency_2020),"emergencies_2020.csv")
 # Appeals
 length(unique_appeals)
+fwrite(data.frame(appeal=unique_appeals),"appeals_2020.csv")
 
 # 2020 spend by sector
 sector_cats = fread("../SectorCategory.csv")[,c("code","name")]
@@ -171,6 +172,13 @@ org_type_spend$spend_trillions = org_type_spend$spend / trillion
 org_type_spend = org_type_spend[order(org_type_spend$spend),]
 org_type_spend$org_type_name = factor(org_type_spend$org_type_name,levels=org_type_spend$org_type_name)
 ggplot(org_type_spend,aes(x=org_type_name,y=spend_trillions)) + geom_bar(stat="identity") + coord_flip() + theme_bw()
+
+# Reporting org by type
+r_org = stack(r_org_by_type)
+names(r_org) = c("reporting_org_ref", "org_type_code")
+r_org = merge(r_org,org_types,by="org_type_code")
+r_org$org_type_code = NULL
+fwrite(r_org,"reporting_org_types.csv")
 
 # Extra
 s_total = stack(s_total_by_year)
