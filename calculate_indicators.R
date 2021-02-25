@@ -37,10 +37,14 @@ r_org_by_year = list()
 r_org_by_type = list()
 activity_count = 0
 humanitarian_activity_count = 0
+humanitarian_scope_emergency_count = 0
+humanitarian_scope_appeal_count = 0
 unique_emergencies = c()
 unique_appeals = c()
 activity_using_sdg_count = 0
 publishers_using_sdgs = c()
+activity_using_sdg_vocab_count = 0
+publishers_using_sdg_vocabs = c()
 unique_sdg_goals = c()
 unique_sdg_targets = c()
 a_count_by_year = list()
@@ -94,6 +98,10 @@ for(idx in 1:length(xml_files)){
       }
     }
     activity_sector_df = rbindlist(activity_sector_list)
+    using_sdg_vocab = F
+    if(any(c("7","8","9") %in% activity_sector_df$vocab)){
+      using_sdg_vocab = T
+    }
     if("1" %in% activity_sector_df$vocab){
       activity_sector_df = activity_sector_df[which(activity_sector_df$vocab=="1"),]
       activity_sector_df$code = substr(activity_sector_df$code,1,3)
@@ -137,10 +145,21 @@ for(idx in 1:length(xml_files)){
     }
     # Humanitarian scope
     humanitarian_scopes = getNodeSet(activity,"./humanitarian-scope")
+    using_hs_etype = F
+    using_hs_atype = F
     if(length(humanitarian_scopes)>0){
       for(h_scope in humanitarian_scopes){
         h_scope_vocab = xmlGetAttr(h_scope,"vocabulary")
         h_scope_code = xmlGetAttr(h_scope,"code")
+        h_scope_type = xmlGetAttr(h_scope,"type")
+        if(length(h_scope_type)>0){
+          if(h_scope_type=="1"){
+            using_hs_etype = T
+          }
+          if(h_scope_type=="2"){
+            using_hs_atype = T
+          }
+        }
         if(length(h_scope_vocab)>0 & length(h_scope_code)>0){
           if(!is.na(h_scope_code) & h_scope_code!=""){
             if(h_scope_vocab=="1-2"){
@@ -156,6 +175,12 @@ for(idx in 1:length(xml_files)){
           }
         }
       }
+    }
+    if(using_hs_etype==T){
+      humanitarian_scope_emergency_count = humanitarian_scope_emergency_count + 1
+    }
+    if(using_hs_atype==T){
+      humanitarian_scope_appeal_count = humanitarian_scope_appeal_count + 1
     }
     # IATI identifier
     iati_identifier = sapply(getNodeSet(activity,"./iati-identifier"),xmlValue)
@@ -286,6 +311,9 @@ for(idx in 1:length(xml_files)){
           }
         }
         transaction_sector_df = rbindlist(transaction_sector_list)
+        if(any(c("7","8","9") %in% transaction_sector_df$vocab)){
+          using_sdg_vocab = T
+        }
         if("1" %in% transaction_sector_df$vocab){
           transaction_sector_df = transaction_sector_df[which(transaction_sector_df$vocab=="1"),]
           transaction_sector_df$code = substr(transaction_sector_df$code,1,3)
@@ -391,43 +419,70 @@ for(idx in 1:length(xml_files)){
             ex_rate = subset(ex_rates,cc==t_currency & year==t_year)$ex.rate
             if(length(ex_rate)>0){
               t_value_usd = t_value / ex_rate
-              spend_total = spend_total + t_value_usd
-              if(t_year %in% names(s_total_by_year)){
-                s_total_by_year[[as.character(t_year)]] = s_total_by_year[[as.character(t_year)]] + t_value_usd
-              }else{
-                s_total_by_year[[as.character(t_year)]] = t_value_usd
-              }
-              # org type transactions 2020
-              if(t_year==2020 & !is.na(reporting_org_type)){
-                if(reporting_org_type %in% names(org_type_spend_2020)){
-                  org_type_spend_2020[[reporting_org_type]] = org_type_spend_2020[[reporting_org_type]] + t_value_usd
-                }else{
-                  org_type_spend_2020[[reporting_org_type]] = t_value_usd
-                }
-              }
-              # sector transactions 2020
-              if(t_year==2020 & nrow(transaction_sector_df)>0){
-                for(sector_idx in nrow(transaction_sector_df)){
-                  sec_percentage = transaction_sector_df[sector_idx,][["percentage"]]
-                  sec_code = transaction_sector_df[sector_idx,][["code"]]
-                  t_value_usd_split_sector = t_value_usd * (as.numeric(sec_percentage)/100)
-                  if(sec_code %in% names(sector_spend_2020)){
-                    sector_spend_2020[[sec_code]] = sector_spend_2020[[sec_code]] + t_value_usd_split_sector
+              if(length(t_value_usd)>0){
+                if(!is.na(t_value_usd)){
+                  spend_total = spend_total + t_value_usd
+                  if(t_year %in% names(s_total_by_year)){
+                    s_total_by_year[[as.character(t_year)]] = s_total_by_year[[as.character(t_year)]] + t_value_usd
                   }else{
-                    sector_spend_2020[[sec_code]] = t_value_usd_split_sector
+                    s_total_by_year[[as.character(t_year)]] = t_value_usd
                   }
-                }
-              }
-              # recipient transactions 2020
-              if(t_year==2020 & nrow(transaction_recipient_df)>0){
-                for(recip_idx in nrow(transaction_recipient_df)){
-                  recip_percentage = transaction_recipient_df[recip_idx,][["percentage"]]
-                  recip_code = transaction_recipient_df[recip_idx,][["code"]]
-                  t_value_usd_split_recip = t_value_usd * (as.numeric(recip_percentage)/100)
-                  if(recip_code %in% names(recipient_spend_2020)){
-                    recipient_spend_2020[[recip_code]] = recipient_spend_2020[[recip_code]] + t_value_usd_split_recip
-                  }else{
-                    recipient_spend_2020[[recip_code]] = t_value_usd_split_recip
+                  # org type transactions 2020
+                  if(t_year==2020 & !is.na(reporting_org_type) & !is.na(reporting_org_ref) & reporting_org_ref!=""){
+                    if(reporting_org_type %in% names(org_type_spend_2020)){
+                      if(reporting_org_ref %in% names(org_type_spend_2020[[reporting_org_type]])){
+                        org_type_spend_2020[[reporting_org_type]][[reporting_org_ref]] = org_type_spend_2020[[reporting_org_type]][[reporting_org_ref]] + t_value_usd
+                      }else{
+                        org_type_spend_2020[[reporting_org_type]][[reporting_org_ref]] = t_value_usd
+                      }
+                    }else{
+                      org_type_spend_2020[[reporting_org_type]] = list()
+                      org_type_spend_2020[[reporting_org_type]][[reporting_org_ref]] = t_value_usd
+                    }
+                  }
+                  # sector transactions 2020
+                  if(t_year==2020 & nrow(transaction_sector_df)>0 & !is.na(reporting_org_ref) & reporting_org_ref!=""){
+                    for(sector_idx in nrow(transaction_sector_df)){
+                      sec_percentage = transaction_sector_df[sector_idx,][["percentage"]]
+                      sec_code = transaction_sector_df[sector_idx,][["code"]]
+                      t_value_usd_split_sector = t_value_usd * (as.numeric(sec_percentage)/100)
+                      if(length(t_value_usd_split_sector)>0){
+                        if(!is.na(t_value_usd_split_sector)){
+                          if(sec_code %in% names(sector_spend_2020)){
+                            if(reporting_org_ref %in% names(sector_spend_2020[[sec_code]])){
+                              sector_spend_2020[[sec_code]][[reporting_org_ref]] = sector_spend_2020[[sec_code]][[reporting_org_ref]] + t_value_usd_split_sector 
+                            }else{
+                              sector_spend_2020[[sec_code]][[reporting_org_ref]] = t_value_usd_split_sector
+                            }
+                          }else{
+                            sector_spend_2020[[sec_code]] = list()
+                            sector_spend_2020[[sec_code]][[reporting_org_ref]] = t_value_usd_split_sector
+                          }
+                        }
+                      }
+                    }
+                  }
+                  # recipient transactions 2020
+                  if(t_year==2020 & nrow(transaction_recipient_df)>0 & !is.na(reporting_org_ref) & reporting_org_ref!=""){
+                    for(recip_idx in nrow(transaction_recipient_df)){
+                      recip_percentage = transaction_recipient_df[recip_idx,][["percentage"]]
+                      recip_code = transaction_recipient_df[recip_idx,][["code"]]
+                      t_value_usd_split_recip = t_value_usd * (as.numeric(recip_percentage)/100)
+                      if(length(t_value_usd_split_recip)>0){
+                        if(!is.na(t_value_usd_split_recip)){
+                          if(recip_code %in% names(recipient_spend_2020)){
+                            if(reporting_org_ref %in% names(recipient_spend_2020[[recip_code]])){
+                              recipient_spend_2020[[recip_code]][[reporting_org_ref]] = recipient_spend_2020[[recip_code]][[reporting_org_ref]] + t_value_usd_split_recip
+                            }else{
+                              recipient_spend_2020[[recip_code]][[reporting_org_ref]] = t_value_usd_split_recip
+                            }
+                          }else{
+                            recipient_spend_2020[[recip_code]] = list()
+                            recipient_spend_2020[[recip_code]][[reporting_org_ref]] = t_value_usd_split_recip
+                          }
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -435,6 +490,12 @@ for(idx in 1:length(xml_files)){
           }
         }
         rm(t_type,t_date,t_value_elem,t_value,t_currency)
+      }
+    }
+    if(using_sdg_vocab==T){
+      activity_using_sdg_vocab_count = activity_using_sdg_vocab_count + 1
+      if(!is.na(reporting_org_ref) & reporting_org_ref!="" & !(reporting_org_ref %in% publishers_using_sdg_vocabs)){
+        publishers_using_sdg_vocabs = c(publishers_using_sdg_vocabs, reporting_org_ref)
       }
     }
     # Budgets
@@ -472,22 +533,35 @@ for(idx in 1:length(xml_files)){
             ex_rate = subset(ex_rates,cc==b_currency & year==b_year)$ex.rate
             if(length(ex_rate)>0){
               b_value_usd = b_value / ex_rate
-              budget_total = budget_total + b_value_usd
-              if(b_year %in% names(b_total_by_year)){
-                b_total_by_year[[as.character(b_year)]] = b_total_by_year[[as.character(b_year)]] + b_value_usd
-              }else{
-                b_total_by_year[[as.character(b_year)]] = b_value_usd
-              }
-              # recipient budgets 2021
-              if(b_year==2021 & nrow(activity_recipient_df)>0){
-                for(recip_idx in nrow(activity_recipient_df)){
-                  recip_percentage = activity_recipient_df[recip_idx,][["percentage"]]
-                  recip_code = activity_recipient_df[recip_idx,][["code"]]
-                  b_value_usd_split_recip = b_value_usd * (as.numeric(recip_percentage)/100)
-                  if(recip_code %in% names(recipient_budget_2021)){
-                    recipient_budget_2021[[recip_code]] = recipient_budget_2021[[recip_code]] + b_value_usd_split_recip
+              if(length(b_value_usd)>0){
+                if(!is.na(b_value_usd)){
+                  budget_total = budget_total + b_value_usd
+                  if(b_year %in% names(b_total_by_year)){
+                    b_total_by_year[[as.character(b_year)]] = b_total_by_year[[as.character(b_year)]] + b_value_usd
                   }else{
-                    recipient_budget_2021[[recip_code]] = b_value_usd_split_recip
+                    b_total_by_year[[as.character(b_year)]] = b_value_usd
+                  }
+                  # recipient budgets 2021
+                  if(b_year==2021 & nrow(activity_recipient_df)>0 & !is.na(reporting_org_ref) & reporting_org_ref!=""){
+                    for(recip_idx in nrow(activity_recipient_df)){
+                      recip_percentage = activity_recipient_df[recip_idx,][["percentage"]]
+                      recip_code = activity_recipient_df[recip_idx,][["code"]]
+                      b_value_usd_split_recip = b_value_usd * (as.numeric(recip_percentage)/100)
+                      if(length(b_value_usd_split_recip)>0){
+                        if(!is.na(b_value_usd_split_recip)){
+                          if(recip_code %in% names(recipient_budget_2021)){
+                            if(reporting_org_ref %in% names(recipient_budget_2021[[recip_code]])){
+                              recipient_budget_2021[[recip_code]][[reporting_org_ref]] = recipient_budget_2021[[recip_code]][[reporting_org_ref]] + b_value_usd_split_recip
+                            }else{
+                              recipient_budget_2021[[recip_code]][[reporting_org_ref]] = b_value_usd_split_recip
+                            }
+                          }else{
+                            recipient_budget_2021[[recip_code]] = list()
+                            recipient_budget_2021[[recip_code]][[reporting_org_ref]] = b_value_usd_split_recip
+                          }
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -510,10 +584,14 @@ length(r_org_by_year[["2020"]])
 length(r_org_by_type[["10"]])
 activity_count
 humanitarian_activity_count
+humanitarian_scope_emergency_count
+humanitarian_scope_appeal_count
 length(unique_emergencies)
 length(unique_appeals)
 activity_using_sdg_count
 length(publishers_using_sdgs)
+activity_using_sdg_vocab_count
+length(publishers_using_sdg_vocabs)
 unique_sdg_goals
 unique_sdg_targets
 a_count_by_year[["2019"]]
@@ -527,10 +605,10 @@ b_total_by_year[["2020"]]
 transaction_count[["3"]] + transaction_count[["4"]]
 t_count_by_year[["2019"]][["3"]] + t_count_by_year[["2019"]][["4"]]
 t_count_by_year[["2020"]][["3"]] + t_count_by_year[["2020"]][["4"]]
-sector_spend_2020[["151"]]
-recipient_spend_2020[["BD"]]
-recipient_budget_2021[["BD"]]
-org_type_spend_2020[["10"]]
+length(sector_spend_2020[["151"]])
+length(recipient_spend_2020[["KE"]])
+length(recipient_budget_2021[["KE"]])
+length(org_type_spend_2020[["10"]])
 save(
   unique_reporting_orgs,
   unique_iati_identifiers,
@@ -538,10 +616,14 @@ save(
   r_org_by_type,
   activity_count,
   humanitarian_activity_count,
+  humanitarian_scope_emergency_count,
+  humanitarian_scope_appeal_count,
   unique_emergencies,
   unique_appeals,
   activity_using_sdg_count,
   publishers_using_sdgs,
+  activity_using_sdg_vocab_count,
+  publishers_using_sdg_vocabs,
   unique_sdg_goals,
   unique_sdg_targets,
   a_count_by_year,
@@ -555,5 +637,5 @@ save(
   recipient_spend_2020,
   recipient_budget_2021,
   org_type_spend_2020,
-  file="indicators_feb_22_2021.RData"
+  file="indicators_feb_22_2020_2.RData"
 )
