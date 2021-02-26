@@ -418,7 +418,7 @@ for(idx in 1:length(xml_files)){
             t_year = as.numeric(substr(t_date,1,4))
             ex_rate = subset(ex_rates,cc==t_currency & year==t_year)$ex.rate
             if(length(ex_rate)>0){
-              t_value_usd = t_value / ex_rate
+              t_value_usd = t_value * ex_rate
               if(length(t_value_usd)>0){
                 if(!is.na(t_value_usd)){
                   spend_total = spend_total + t_value_usd
@@ -532,7 +532,7 @@ for(idx in 1:length(xml_files)){
             b_year = as.numeric(substr(budget_period_start_iso_date,1,4))
             ex_rate = subset(ex_rates,cc==b_currency & year==b_year)$ex.rate
             if(length(ex_rate)>0){
-              b_value_usd = b_value / ex_rate
+              b_value_usd = b_value * ex_rate
               if(length(b_value_usd)>0){
                 if(!is.na(b_value_usd)){
                   budget_total = budget_total + b_value_usd
@@ -637,5 +637,5 @@ save(
   recipient_spend_2020,
   recipient_budget_2021,
   org_type_spend_2020,
-  file="indicators_feb_22_2020_2.RData"
+  file="indicators_feb_22_2021_2.RData"
 )
