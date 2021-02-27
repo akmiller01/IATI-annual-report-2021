@@ -214,17 +214,17 @@ s_total = stack(s_total_by_year)
 setnames(s_total,"ind","year")
 setnames(s_total,"values","total_spend")
 s_total$year = as.numeric(as.character(s_total$year))
-s_total$total_spend = s_total$total_spend/trillion
+s_total$total_spend = s_total$total_spend/billion
 s_total = subset(s_total,year>2000 & year<2021)
 s_total = s_total[order(s_total$year),]
-ggplot(s_total,aes(x=year,y=total_spend)) + geom_line() + theme_bw() + labs(y="Spend (trillions)")
+ggplot(s_total,aes(x=year,y=total_spend)) + geom_line() + theme_bw() + labs(y="Spend (billions)")
 
 b_total_by_year = lapply(b_total_by_year,`[[`,1)
 b_total = stack(b_total_by_year)
 setnames(b_total,"ind","year")
 setnames(b_total,"values","total_budget")
 b_total$year = as.numeric(as.character(b_total$year))
-b_total$total_budget = b_total$total_budget/trillion
+b_total$total_budget = b_total$total_budget/billion
 b_total = subset(b_total,year>2000 & year<2021)
 b_total = b_total[order(b_total$year),]
-ggplot(b_total,aes(x=year,y=total_budget)) + geom_line() + theme_bw() + labs(y="Budget (trillions)")
+ggplot(b_total,aes(x=year,y=total_budget)) + geom_line() + theme_bw() + labs(y="Budget (billions)")
