@@ -46,8 +46,10 @@ ggplot(a_count_long,aes(x=year,y=value,group=variable,color=variable)) + geom_li
 
 # Total budgets
 budget_total / trillion
+budget_total - budget_total_2019
 # Total spend
 spend_total / trillion
+(spend_total - spend_total_2019)/billion
 
 # Transactions disaggregated by type
 t_types = fread("../TransactionType.csv")[,c("code","name")]
