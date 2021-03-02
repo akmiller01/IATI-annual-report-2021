@@ -14,7 +14,7 @@ for(env_var in ls()){
   rm(list=env_var)
 }
 
-load("indicators_feb_22_2021_2.RData")
+load("indicators_feb_22_2021_3.RData")
 
 billion = 1000000000
 trillion = billion * 1000
