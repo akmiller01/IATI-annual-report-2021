@@ -54,6 +54,7 @@ spend_total = 0
 s_total_by_year = list()
 budget_total = 0
 b_total_by_year = list()
+a_count_with_transaction_by_year = list()
 sector_spend_2020 = list()
 recipient_spend_2020 = list()
 recipient_budget_2021 = list()
@@ -301,6 +302,7 @@ for(idx in 1:length(xml_files)){
     }
     # Transactions
     transactions = getNodeSet(activity,"./transaction")
+    transaction_a_count_years = c()
     if(length(transactions)>0){
       for(transaction in transactions){
         # Transaction sectors
@@ -407,6 +409,11 @@ for(idx in 1:length(xml_files)){
         }else{
           t_date = t_date_code_elems[[1]][["iso-date"]]
           t_year = as.numeric(substr(t_date,1,4))
+        }
+        if(!is.na(t_year)){
+          if(!(t_year %in% transaction_a_count_years)){
+            transaction_a_count_years = c(transaction_a_count_years,t_year)
+          }
         }
         # Transaction count by type and year
         if(!is.na(t_type) & !is.na(t_year) & t_type!=""){
@@ -527,6 +534,14 @@ for(idx in 1:length(xml_files)){
       activity_using_sdg_vocab_count = activity_using_sdg_vocab_count + 1
       if(!is.na(reporting_org_ref) & reporting_org_ref!="" & !(reporting_org_ref %in% publishers_using_sdg_vocabs)){
         publishers_using_sdg_vocabs = c(publishers_using_sdg_vocabs, reporting_org_ref)
+      }
+    }
+    for(transaction_a_count_year in transaction_a_count_years){
+      str_yr = str(transaction_a_count_year)
+      if(transaction_a_count_year %in% names(a_count_with_transaction_by_year)){
+        a_count_with_transaction_by_year[[str_yr]] = a_count_with_transaction_by_year[[str_yr]] + 1
+      }else{
+        a_count_with_transaction_by_year[[str_yr]] = 1
       }
     }
     # Budgets
@@ -707,6 +722,7 @@ b_total_by_year[["2020"]]
 transaction_count[["3"]] + transaction_count[["4"]]
 t_count_by_year[["2019"]][["3"]] + t_count_by_year[["2019"]][["4"]]
 t_count_by_year[["2020"]][["3"]] + t_count_by_year[["2020"]][["4"]]
+a_count_with_transaction_by_year[["2020"]]
 length(sector_spend_2020[["151"]])
 length(recipient_spend_2020[["KE"]])
 length(recipient_budget_2021[["KE"]])
@@ -735,6 +751,7 @@ save(
   b_total_by_year,
   transaction_count,
   t_count_by_year,
+  a_count_with_transaction_by_year,
   sector_spend_2020,
   recipient_spend_2020,
   recipient_budget_2021,

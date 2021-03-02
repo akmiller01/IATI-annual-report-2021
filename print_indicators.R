@@ -32,6 +32,7 @@ fwrite(data.frame(new_refs),"new_publishers.csv")
 # Total activities
 activity_count
 activity_count - activity_count_2019
+a_count_with_transaction_by_year[["2020"]]
 # Past 5 years
 a_count = stack(a_count_by_year)
 setnames(a_count,"ind","year")
@@ -43,6 +44,16 @@ a_count$cumulative_activities = cumsum(a_count$activities)
 fwrite(a_count,"activities_count.csv")
 a_count_long = melt(a_count,id.vars="year")
 ggplot(a_count_long,aes(x=year,y=value,group=variable,color=variable)) + geom_line() + theme_bw()
+a_count_t = stack(a_count_with_transaction_by_year)
+setnames(a_count_t,"ind","year")
+setnames(a_count_t,"values","activities")
+a_count_t$year = as.numeric(as.character(a_count_t$year))
+a_count_t = subset(a_count_t,year>2014 & year<2021)
+a_count_t = a_count_t[order(a_count_t$year),]
+a_count_t$cumulative_activities = cumsum(a_count_t$activities)
+fwrite(a_count_t,"activities_count_w_trans.csv")
+a_count_t_long = melt(a_count_t,id.vars="year")
+ggplot(a_count_t_long,aes(x=year,y=value,group=variable,color=variable)) + geom_line() + theme_bw()
 
 # Total budgets
 budget_total / trillion
