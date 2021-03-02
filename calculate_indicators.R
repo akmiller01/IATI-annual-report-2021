@@ -537,7 +537,7 @@ for(idx in 1:length(xml_files)){
       }
     }
     for(transaction_a_count_year in transaction_a_count_years){
-      str_yr = str(transaction_a_count_year)
+      str_yr = as.character(transaction_a_count_year)
       if(transaction_a_count_year %in% names(a_count_with_transaction_by_year)){
         a_count_with_transaction_by_year[[str_yr]] = a_count_with_transaction_by_year[[str_yr]] + 1
       }else{
