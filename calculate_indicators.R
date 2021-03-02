@@ -214,7 +214,7 @@ for(idx in 1:length(xml_files)){
     if(length(activity_date)==0){
       activity_date = NA
     }
-    activity_year = substr(activity_date,1,4)
+    activity_year = max(substr(activity_date,1,4))
 
     # Activity count by year
     if(!is.na(activity_year)){
