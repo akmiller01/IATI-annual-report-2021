@@ -211,6 +211,9 @@ for(idx in 1:length(xml_files)){
     }else{
       activity_date = NA
     }
+    if(length(activity_date)==0){
+      activity_date = NA
+    }
     activity_year = substr(activity_date,1,4)
 
     # Activity count by year
@@ -736,5 +739,5 @@ save(
   recipient_spend_2020,
   recipient_budget_2021,
   org_type_spend_2020,
-  file="indicators_feb_22_2021_2.RData"
+  file="indicators_feb_22_2021_3.RData"
 )
