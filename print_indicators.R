@@ -122,6 +122,11 @@ fwrite(data.frame(appeal=unique_appeals),"appeals_2020.csv")
 sector_cats = fread("../SectorCategory.csv")[,c("code","name")]
 names(sector_cats) = c("sector_code","sector_name")
 sector_cats$sector_code = as.character(sector_cats$sector_code)
+blank_sector = data.frame(
+  sector_code=c("000","999")
+  ,sector_name=c("Sector not coded","Non-OECD sector")
+  )
+sector_cats = rbind(sector_cats,blank_sector)
 sector_stack = lapply(sector_spend_2020, stack)
 for(sector_name in names(sector_stack)){
   sector_stack[[sector_name]]$sector_code = sector_name
@@ -148,6 +153,11 @@ fwrite(sector_spend_clean,"Sector_spend_2020.csv")
 recipients = fread("../Country.csv")[,c("code","name")]
 names(recipients) = c("recipient_code","recipient_name")
 recipients$recipient_code = as.character(recipients$recipient_code)
+blank_recipient = data.frame(
+  sector_code=c("REG","MIS"),
+  sector_name=c("Recipient region only","Recipient country not coded")
+  )
+recipients = rbind(recipients,blank_recipient)
 recipient_stack = lapply(recipient_spend_2020, stack)
 for(recipient_name in names(recipient_stack)){
   recipient_stack[[recipient_name]]$recipient_code = recipient_name

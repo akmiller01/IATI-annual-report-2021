@@ -102,6 +102,10 @@ for(idx in 1:length(xml_files)){
     if(any(c("7","8","9") %in% activity_sector_df$vocab)){
       using_sdg_vocab = T
     }
+    had_sectors = F
+    if(nrow(activity_sector_df)>0){
+      had_sectors = T
+    }
     if("1" %in% activity_sector_df$vocab){
       activity_sector_df = activity_sector_df[which(activity_sector_df$vocab=="1"),]
       activity_sector_df$code = substr(activity_sector_df$code,1,3)
@@ -111,6 +115,12 @@ for(idx in 1:length(xml_files)){
     if(nrow(activity_sector_df)>0){
       activity_sector_df = activity_sector_df[which(!is.na(activity_sector_df$code) & activity_sector_df$code!=""),]
       activity_sector_df$percentage = as.numeric(activity_sector_df$percentage)
+    }else{
+      if(had_sectors){
+        activity_sector_df = data.frame(code="999",percentage="100")
+      }else{
+        activity_sector_df = data.frame(code="000",percentage="100")
+      }
     }
     # Activity recipients
     activity_recipients = getNodeSet(activity,"./recipient-country")
@@ -132,6 +142,7 @@ for(idx in 1:length(xml_files)){
       }
     }
     activity_recipient_df = rbindlist(activity_recipient_list)
+    activity_regions = getNodeSet(activity,"./recipient-region")
     if(nrow(activity_recipient_df)>0){
       activity_recipient_df = activity_recipient_df[which(!is.na(activity_recipient_df$code) & activity_recipient_df$code!=""),]
       activity_recipient_df$code = toupper(activity_recipient_df$code)
@@ -191,15 +202,17 @@ for(idx in 1:length(xml_files)){
       unique_iati_identifiers = c(unique_iati_identifiers, iati_identifier)
     }
     # Activity date
-    activity_date_elems = getNodeSet(activity,"./activity-date/@iso-date")
-    if(length(activity_date_elems)==0){
-      activity_date = NA
-      activity_year = NA
+    planned_start_elem = getNodeSet(activity,"./activity-date[@type='1']/@iso-date")
+    actual_start_elem = getNodeSet(activity,"./activity-date[@type='2']/@iso-date")
+    if(length(actual_start_elem)!=0){
+      activity_date = sapply(actual_start_elem,`[[`,"iso-date")
+    }else if(length(planned_start_elem)!=0){
+      activity_date = sapply(actual_start_elem,`[[`,"iso-date")
     }else{
-      activity_dates = anydate(sapply(activity_date_elems,`[[`,"iso-date"))
-      activity_date = mean(activity_dates)
-      activity_year = as.character(year(activity_date))
+      activity_date = NA
     }
+    activity_year = substr(activity_date,1,4)
+
     # Activity count by year
     if(!is.na(activity_year)){
       if(activity_year %in% names(a_count_by_year)){
@@ -314,6 +327,10 @@ for(idx in 1:length(xml_files)){
         if(any(c("7","8","9") %in% transaction_sector_df$vocab)){
           using_sdg_vocab = T
         }
+        had_transaction_sectors = F
+        if(nrow(transaction_sector_df)>0){
+          had_transaction_sectors = T
+        }
         if("1" %in% transaction_sector_df$vocab){
           transaction_sector_df = transaction_sector_df[which(transaction_sector_df$vocab=="1"),]
           transaction_sector_df$code = substr(transaction_sector_df$code,1,3)
@@ -324,7 +341,9 @@ for(idx in 1:length(xml_files)){
           transaction_sector_df = subset(transaction_sector_df,!is.na(code) & code!="")
           transaction_sector_df$percentage = as.numeric(transaction_sector_df$percentage)
         }
-        if(nrow(transaction_sector_df)==0){
+        if(nrow(transaction_sector_df)==0 & had_transaction_sectors==T){
+          transaction_sector_df = data.frame(code="999",percentage="100")
+        }else if(nrow(transaction_sector_df)==0){
           transaction_sector_df = activity_sector_df
         }
         
@@ -350,7 +369,16 @@ for(idx in 1:length(xml_files)){
           transaction_recipient_df$code = toupper(transaction_recipient_df$code)
         }
         if(nrow(transaction_recipient_df)==0){
-          transaction_recipient_df = activity_recipient_df
+          transaction_regions = getNodeSet(transaction,"./recipient-region")
+          if(nrow(activity_recipient_df)==0){
+            if(length(transaction_regions)>0 | length(activity_regions)>0){
+              transaction_recipient_df = data.frame(code="REG",percentage="100")
+            }else{
+              transaction_recipient_df = data.frame(code="MIS",percentage="100")
+            }
+          }else{
+            transaction_recipient_df = activity_recipient_df
+          }
         }
         
         # Transaction type
@@ -500,6 +528,8 @@ for(idx in 1:length(xml_files)){
     }
     # Budgets
     budgets = getNodeSet(activity,"./budget")
+    tmp_budgets_list = list()
+    tmp_budget_index = 1
     if(length(budgets)>0){
       for(budget in budgets){
         budget_period_start_iso_date = sapply(getNodeSet(budget, "./period-start"),xmlValue)
@@ -514,61 +544,130 @@ for(idx in 1:length(xml_files)){
             budget_period_start_iso_date = NA
           }
         }
+        budget_period_end_iso_date = sapply(getNodeSet(budget, "./period-end"),xmlValue)
+        if(length(budget_period_end_iso_date)==0){
+          budget_period_end_iso_date = getNodeSet(budget, "./period-end/@iso-date")[[1]][["iso-date"]]
+          if(length(budget_period_end_iso_date)==0){
+            budget_period_end_iso_date = NA
+          }
+        }else if(budget_period_end_iso_date==""){
+          budget_period_end_iso_date = getNodeSet(budget, "./period-end/@iso-date")[[1]][["iso-date"]]
+          if(length(budget_period_end_iso_date)==0){
+            budget_period_end_iso_date = NA
+          }
+        }
+        budget_type = xmlGetAttr(budget,"type")
+        if(length(budget_type)==0){
+          budget_type = NA
+        }
         b_value_elem = getNodeSet(budget,"./value")
-        if(length(b_value_elem)>0){
+        if(
+          length(b_value_elem)>0 &
+          !is.na(budget_period_start_iso_date) &
+          !is.na(budget_period_end_iso_date) &
+          !is.na(budget_type)
+        ){
           b_currency = sapply(b_value_elem,xmlGetAttr,"currency")[[1]]
           if(length(b_currency)==0){
             b_currency = default_currency
           }
           
           b_value = as.numeric(gsub(",","",sapply(b_value_elem,xmlValue)))[1]
-          if(!is.na(budget_period_start_iso_date) & !is.na(b_value) & !is.na(b_currency) &
-             budget_period_start_iso_date!="" & b_value!="" & b_currency!=""
-          ){
-            b_currency = gsub(" ","",toupper(b_currency))
-            if(b_currency %in% names(currency_remap)){
-              b_currency = currency_remap[[b_currency]]
-            }
-            b_year = as.numeric(substr(budget_period_start_iso_date,1,4))
+          b_currency = gsub(" ","",toupper(b_currency))
+          if(b_currency %in% names(currency_remap)){
+            b_currency = currency_remap[[b_currency]]
+          }
+          b_date_mean = tryCatch(
+            mean(
+              c(
+                as.Date(budget_period_start_iso_date),
+                as.Date(budget_period_end_iso_date)
+              )
+            ),
+            error=function(e) e
+          )
+          if(!inherits(b_date_mean, "error")){
+            b_year = as.numeric(substr(b_date_mean,1,4))
             ex_rate = subset(ex_rates,cc==b_currency & year==b_year)$ex.rate
             if(length(ex_rate)>0){
               b_value_usd = b_value * ex_rate
               if(length(b_value_usd)>0){
                 if(!is.na(b_value_usd)){
-                  budget_total = budget_total + b_value_usd
-                  if(b_year %in% names(b_total_by_year)){
-                    b_total_by_year[[as.character(b_year)]] = b_total_by_year[[as.character(b_year)]] + b_value_usd
-                  }else{
-                    b_total_by_year[[as.character(b_year)]] = b_value_usd
-                  }
-                  # recipient budgets 2021
-                  if(b_year==2021 & nrow(activity_recipient_df)>0 & !is.na(reporting_org_ref) & reporting_org_ref!=""){
-                    for(recip_idx in nrow(activity_recipient_df)){
-                      recip_percentage = activity_recipient_df[recip_idx,][["percentage"]]
-                      recip_code = activity_recipient_df[recip_idx,][["code"]]
-                      b_value_usd_split_recip = b_value_usd * (as.numeric(recip_percentage)/100)
-                      if(length(b_value_usd_split_recip)>0){
-                        if(!is.na(b_value_usd_split_recip)){
-                          if(recip_code %in% names(recipient_budget_2021)){
-                            if(reporting_org_ref %in% names(recipient_budget_2021[[recip_code]])){
-                              recipient_budget_2021[[recip_code]][[reporting_org_ref]] = recipient_budget_2021[[recip_code]][[reporting_org_ref]] + b_value_usd_split_recip
-                            }else{
-                              recipient_budget_2021[[recip_code]][[reporting_org_ref]] = b_value_usd_split_recip
-                            }
-                          }else{
-                            recipient_budget_2021[[recip_code]] = list()
-                            recipient_budget_2021[[recip_code]][[reporting_org_ref]] = b_value_usd_split_recip
-                          }
-                        }
-                      }
-                    }
-                  }
+                  tmp_budget_frame = list(
+                    start=budget_period_start_iso_date,
+                    end=budget_period_end_iso_date,
+                    value_usd=b_value_usd,
+                    type=budget_type
+                  )
+                  tmp_budgets_list[[tmp_budget_index]] = tmp_budget_frame
+                  tmp_budget_index = tmp_budget_index + 1
                 }
               }
             }
           }
         }
-        rm(budget_period_start_iso_date,b_value_elem,b_value,b_currency)
+        rm(budget_period_start_iso_date,budget_period_end_iso_date,b_value_elem,b_value,b_currency)
+      }
+    }
+    tmp_all_budgets = rbindlist(tmp_budgets_list)
+    if(nrow(tmp_all_budgets)>0){
+      original_budgets = subset(tmp_all_budgets,type=="1")
+      original_budgets$overlap = F
+      revised_budgets = subset(tmp_all_budgets,type=="2")
+      if(nrow(original_budgets)==0){
+        fixed_budgets = revised_budgets
+      }else if(nrow(revised_budgets)==0){
+        fixed_budgets = original_budgets
+      }else{
+        fixed_budgets = revised_budgets
+        for(original_row_idx in 1:nrow(original_budgets)){
+          original_row = original_budgets[original_row_idx,]
+          for(revised_row_idx in 1:nrow(revised_budgets)){
+            revised_row = revised_budgets[revised_row_idx,]
+            inner_overlap = (original_row$start >= revised_row$start) & (original_row$end <= revised_row$end)
+            outer_overlap = (revised_row$start >= original_row$start) & (revised_row$end <= original_row$end)
+            start_overlap = (original_row$start >= revised_row$start) &  (original_row$start <= revised_row$end)
+            end_overlap = (original_row$end >= revised_row$start) &  (original_row$end <= revised_row$end)
+            if(inner_overlap | outer_overlap | start_overlap | end_overlap){
+              original_budgets[original_row_idx,]$overlap = T
+            }
+          }
+        }
+        original_budgets = subset(original_budgets, overlap==F)
+        original_budgets$overlap = NULL
+        fixed_budgets = rbind(original_budgets, revised_budgets)
+      }
+      for(fixed_budget_idx in 1:nrow(fixed_budgets)){
+        fixed_budget = fixed_budgets[fixed_budget_idx,]
+        b_value_usd = fixed_budget$value_usd
+        b_year = year(fixed_budget$start)
+        budget_total = budget_total + b_value_usd
+        if(b_year %in% names(b_total_by_year)){
+          b_total_by_year[[as.character(b_year)]] = b_total_by_year[[as.character(b_year)]] + b_value_usd
+        }else{
+          b_total_by_year[[as.character(b_year)]] = b_value_usd
+        }
+        if(b_year==2021 & nrow(activity_recipient_df)>0 & !is.na(reporting_org_ref) & reporting_org_ref!=""){
+          for(recip_idx in nrow(activity_recipient_df)){
+            recip_percentage = activity_recipient_df[recip_idx,][["percentage"]]
+            recip_code = activity_recipient_df[recip_idx,][["code"]]
+            b_value_usd_split_recip = b_value_usd * (as.numeric(recip_percentage)/100)
+            if(length(b_value_usd_split_recip)>0){
+              if(!is.na(b_value_usd_split_recip)){
+                if(recip_code %in% names(recipient_budget_2021)){
+                  if(reporting_org_ref %in% names(recipient_budget_2021[[recip_code]])){
+                    recipient_budget_2021[[recip_code]][[reporting_org_ref]] = recipient_budget_2021[[recip_code]][[reporting_org_ref]] + b_value_usd_split_recip
+                  }else{
+                    recipient_budget_2021[[recip_code]][[reporting_org_ref]] = b_value_usd_split_recip
+                  }
+                }else{
+                  recipient_budget_2021[[recip_code]] = list()
+                  recipient_budget_2021[[recip_code]][[reporting_org_ref]] = b_value_usd_split_recip
+                }
+              }
+            }
+          }
+        }
       }
     }
     rm(iati_identifier,default_currency,reporting_org_elem,reporting_org_attrs,reporting_org_ref,transactions)
