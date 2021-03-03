@@ -27,6 +27,12 @@ for(cc in ccs){
   currency_remap[[cc]] = cc
 }
 
+# Placeholder dfs
+reg_recip = data.frame(code="REG",percentage="100")
+mis_recip = data.frame(code="MIS",percentage="100")
+sec_999 = data.frame(code="999",percentage="100")
+sec_000 = data.frame(code="000",percentage="100")
+
 # Find XML files
 xml_files = list.files(path="~/git/IATI-Registry-Refresher/data",full.names=T,recursive=T)
 
@@ -118,9 +124,9 @@ for(idx in 1:length(xml_files)){
       activity_sector_df$percentage = as.numeric(activity_sector_df$percentage)
     }else{
       if(had_sectors){
-        activity_sector_df = data.frame(code="999",percentage="100")
+        activity_sector_df = copy(sec_999)
       }else{
-        activity_sector_df = data.frame(code="000",percentage="100")
+        activity_sector_df = copy(sec_000)
       }
     }
     # Activity recipients
@@ -346,10 +352,12 @@ for(idx in 1:length(xml_files)){
           transaction_sector_df = subset(transaction_sector_df,!is.na(code) & code!="")
           transaction_sector_df$percentage = as.numeric(transaction_sector_df$percentage)
         }
-        if(nrow(transaction_sector_df)==0 & had_transaction_sectors==T){
-          transaction_sector_df = data.frame(code="999",percentage="100")
-        }else if(nrow(transaction_sector_df)==0){
-          transaction_sector_df = activity_sector_df
+        if(nrow(transaction_sector_df)==0){
+          if(had_transaction_sectors==T){
+            transaction_sector_df = copy(sec_999)
+          }else{
+            transaction_sector_df = activity_sector_df
+          }
         }
         
         # Transaction recipients
@@ -377,9 +385,9 @@ for(idx in 1:length(xml_files)){
           transaction_regions = getNodeSet(transaction,"./recipient-region")
           if(nrow(activity_recipient_df)==0){
             if(length(transaction_regions)>0 | length(activity_regions)>0){
-              transaction_recipient_df = data.frame(code="REG",percentage="100")
+              transaction_recipient_df = copy(reg_recip)
             }else{
-              transaction_recipient_df = data.frame(code="MIS",percentage="100")
+              transaction_recipient_df = copy(mis_recip)
             }
           }else{
             transaction_recipient_df = activity_recipient_df
