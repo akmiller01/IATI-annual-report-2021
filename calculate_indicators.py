@@ -1,5 +1,6 @@
 import datetime
 from dateutil import parser
+import gc
 import json
 from lxml import etree
 from lxml.etree import XMLParser
@@ -98,6 +99,13 @@ if __name__ == '__main__':
     org_type_spend_2020 = dict()
 
     rootdir = '/home/alex/git/IATI-Registry-Refresher/data'
+
+    mem_keep_vars = dir()
+    mem_keep_vars.append("subdir")
+    mem_keep_vars.append("dirs")
+    mem_keep_vars.append("files")
+    mem_keep_vars.append("filename")
+
     for subdir, dirs, files in os.walk(rootdir):
         for filename in files:
             file_count = file_count + 1
@@ -440,7 +448,7 @@ if __name__ == '__main__':
                         a_count_with_transaction_by_year[transaction_a_count_year] = a_count_with_transaction_by_year[transaction_a_count_year] + 1
                     else:
                         a_count_with_transaction_by_year[transaction_a_count_year] = 1
-                
+
                 # Budgets
                 original_budgets = []
                 revised_budgets = []
@@ -523,6 +531,11 @@ if __name__ == '__main__':
                                         recipient_budget_2021[recip_code] = dict()
                                         recipient_budget_2021[recip_code][reporting_org_ref] = b_value_usd_split_recip
 
+            for varname in dir():
+                if varname not in mem_keep_vars:
+                    del globals()[varname]
+
+            gc.collect()
     # Write
     write_obj = {
         "unique_reporting_orgs": unique_reporting_orgs,
@@ -556,7 +569,3 @@ if __name__ == '__main__':
     }
     with open("output/indicators_feb_22_2021.json", "w") as outfile:
         json.dump(write_obj, outfile)
-
-
-                    
-                
