@@ -560,24 +560,36 @@ for(idx in 1:length(xml_files)){
       for(budget in budgets){
         budget_period_start_iso_date = sapply(getNodeSet(budget, "./period-start"),xmlValue)
         if(length(budget_period_start_iso_date)==0){
-          budget_period_start_iso_date = getNodeSet(budget, "./period-start/@iso-date")[[1]][["iso-date"]]
+          budget_period_start_iso_date_elem = getNodeSet(budget, "./period-start/@iso-date")
+          if(length(budget_period_start_iso_date_elem)>0){
+            budget_period_start_iso_date = budget_period_start_iso_date_elem[[1]][["iso-date"]]
+          }
           if(length(budget_period_start_iso_date)==0){
             budget_period_start_iso_date = NA
           }
         }else if(budget_period_start_iso_date==""){
-          budget_period_start_iso_date = getNodeSet(budget, "./period-start/@iso-date")[[1]][["iso-date"]]
+          budget_period_start_iso_date_elem = getNodeSet(budget, "./period-start/@iso-date")
+          if(length(budget_period_start_iso_date_elem)>0){
+            budget_period_start_iso_date = budget_period_start_iso_date_elem[[1]][["iso-date"]]
+          }
           if(length(budget_period_start_iso_date)==0){
             budget_period_start_iso_date = NA
           }
         }
         budget_period_end_iso_date = sapply(getNodeSet(budget, "./period-end"),xmlValue)
         if(length(budget_period_end_iso_date)==0){
-          budget_period_end_iso_date = getNodeSet(budget, "./period-end/@iso-date")[[1]][["iso-date"]]
+          budget_period_end_iso_date_elem = getNodeSet(budget, "./period-end/@iso-date")
+          if(length(budget_period_end_iso_date_elem)>0){
+            budget_period_end_iso_date = budget_period_end_iso_date_elem[[1]][["iso-date"]]
+          }
           if(length(budget_period_end_iso_date)==0){
             budget_period_end_iso_date = NA
           }
         }else if(budget_period_end_iso_date==""){
-          budget_period_end_iso_date = getNodeSet(budget, "./period-end/@iso-date")[[1]][["iso-date"]]
+          budget_period_end_iso_date_elem = getNodeSet(budget, "./period-end/@iso-date")
+          if(length(budget_period_end_iso_date_elem)>0){
+            budget_period_end_iso_date = budget_period_end_iso_date_elem[[1]][["iso-date"]]
+          }
           if(length(budget_period_end_iso_date)==0){
             budget_period_end_iso_date = NA
           }
