@@ -517,10 +517,16 @@ if __name__ == '__main__':
                             b_total_by_year[b_year] = b_total_by_year[b_year] + b_value_usd
                         else:
                             b_total_by_year[b_year] = b_value_usd
-                        if b_year==2021 and len(activity_recipient_country_codes) > 0 and reporting_org_ref is not None:
-                            for recip_idx in range(0, len(activity_recipient_country_codes)):
-                                recip_percentage = activity_recipient_country_percentages[recip_idx]
-                                recip_code = activity_recipient_country_codes[recip_idx]
+                        if len(activity_recipient_country_codes) == 0:
+                            budget_recipient_country_codes = ["MIS"]
+                            budget_recipient_country_percentages = [100.0]
+                        else:
+                            budget_recipient_country_codes = activity_recipient_country_codes
+                            budget_recipient_country_percentages = activity_recipient_country_percentages
+                        if b_year==2021 and len(budget_recipient_country_codes) > 0 and reporting_org_ref is not None:
+                            for recip_idx in range(0, len(budget_recipient_country_codes)):
+                                recip_percentage = budget_recipient_country_percentages[recip_idx]
+                                recip_code = budget_recipient_country_codes[recip_idx]
                                 b_value_usd_split_recip = b_value_usd * (recip_percentage/100.0)
                                 if b_value_usd_split_recip is not None:
                                     if recip_code in recipient_budget_2021.keys():
