@@ -145,8 +145,9 @@ sector_stack = lapply(sector_spend_2020, stack)
 for(sector_name in names(sector_stack)){
   sector_stack[[sector_name]]$sector_code = sector_name
 }
-sector_spend_disagg = rbindlist(sector_stack)
+sector_spend_disagg = rbindlist(sector_stack,fill=T)
 names(sector_spend_disagg) = c("spend","reporting_org_ref","sector_code")
+sector_spend_disagg$sector_code[which(is.na(sector_spend_disagg$sector_code))] = "000"
 sector_spend_disagg_clean = sector_spend_disagg[which(sector_spend_disagg$sector_code %in% sector_cats$sector_code),]
 sector_spend_disagg_cleanable = sector_spend_disagg[which(nchar(sector_spend_disagg$sector_code)==5),]
 sector_spend_disagg_cleanable$sector_code = substr(sector_spend_disagg_cleanable$sector_code,1,3)
@@ -168,16 +169,19 @@ recipients = fread("../Country.csv")[,c("code","name")]
 names(recipients) = c("recipient_code","recipient_name")
 recipients$recipient_code = as.character(recipients$recipient_code)
 blank_recipient = data.frame(
-  sector_code=c("REG","MIS"),
-  sector_name=c("Recipient region only","Recipient country not coded")
+  recipient_code=c("REG","MIS"),
+  recipient_name=c("Recipient region only","Recipient country not coded")
   )
 recipients = rbind(recipients,blank_recipient)
 recipient_stack = lapply(recipient_spend_2020, stack)
 for(recipient_name in names(recipient_stack)){
   recipient_stack[[recipient_name]]$recipient_code = recipient_name
 }
-recipient_spend_disagg = rbindlist(recipient_stack)
-names(recipient_spend_disagg) = c("spend","reporting_org_ref","recipient_code")
+recipient_spend_disagg = rbindlist(recipient_stack,fill=T)
+recipient_spend_disagg$recipient_code[which(is.na(recipient_spend_disagg$recipient_code))] = "MIS"
+recipient_spend_disagg$recipient_code[which(!(recipient_spend_disagg$recipient_code %in% recipients$recipient_code))] = "MIS"
+recipient_spend_disagg = recipient_spend_disagg[,.(values=sum(values,na.rm=T)),by=.(ind,recipient_code)]
+names(recipient_spend_disagg) = c("reporting_org_ref","recipient_code","spend")
 recipient_spend_disagg = merge(recipient_spend_disagg,recipients,by="recipient_code")
 recipient_spend_disagg$recipient_code = NULL
 recipient_spend_disagg = recipient_spend_disagg[order(-recipient_spend_disagg$spend),]
@@ -193,8 +197,11 @@ recipient_budget_stack = lapply(recipient_budget_2021, stack)
 for(recipient_name in names(recipient_budget_stack)){
   recipient_budget_stack[[recipient_name]]$recipient_code = recipient_name
 }
-recipient_budget_disagg = rbindlist(recipient_budget_stack)
-names(recipient_budget_disagg) = c("budget","reporting_org_ref","recipient_code")
+recipient_budget_disagg = rbindlist(recipient_budget_stack,fill=T)
+recipient_budget_disagg$recipient_code[which(is.na(recipient_budget_disagg$recipient_code))] = "MIS"
+recipient_budget_disagg$recipient_code[which(!(recipient_budget_disagg$recipient_code %in% recipients$recipient_code))] = "MIS"
+recipient_budget_disagg = recipient_budget_disagg[,.(values=sum(values,na.rm=T)),by=.(ind,recipient_code)]
+names(recipient_budget_disagg) = c("reporting_org_ref","recipient_code","budget")
 recipient_budget_disagg = merge(recipient_budget_disagg,recipients,by="recipient_code")
 recipient_budget_disagg$recipient_code = NULL
 recipient_budget_disagg = recipient_budget_disagg[order(-recipient_budget_disagg$budget),]
