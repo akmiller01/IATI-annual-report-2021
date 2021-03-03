@@ -101,6 +101,7 @@ if __name__ == '__main__':
     rootdir = '/home/alex/git/IATI-Registry-Refresher/data'
 
     mem_keep_vars = dir()
+    mem_keep_vars.append("mem_keep_vars")
     mem_keep_vars.append("subdir")
     mem_keep_vars.append("dirs")
     mem_keep_vars.append("files")
