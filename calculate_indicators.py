@@ -489,7 +489,7 @@ if __name__ == '__main__':
                     try:
                         time_range["start"] = parser.parse(b_start_date)
                         time_range["end"] = parser.parse(b_end_date)
-                    except (TypeError, ValueError) as error:
+                    except (AttributeError, TypeError, ValueError) as error:
                         time_range["start"] = None
                         time_range["end"] = None
                     if time_range["start"] is not None:
