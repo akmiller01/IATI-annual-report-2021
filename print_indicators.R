@@ -14,9 +14,10 @@ for(env_var in ls()){
   rm(list=env_var)
 }
 
-load("indicators_feb_22_2021_3.RData")
-
 py_json = fromJSON("indicators_feb_22_2021.json")
+for(json_name in names(py_json)){
+  assign(json_name, py_json[[json_name]])
+}
 
 billion = 1000000000
 trillion = billion * 1000

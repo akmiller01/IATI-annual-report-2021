@@ -230,8 +230,6 @@ if __name__ == '__main__':
                 for tag in default_tags:
                     if tag in activity.attrib.keys():
                         defaults[tag] = activity.attrib[tag]
-                    elif tag in child_tags:
-                        defaults[tag] = default_first(activity.xpath("{}/@code".format(tag)))
                     else:
                         defaults[tag] = None
 
