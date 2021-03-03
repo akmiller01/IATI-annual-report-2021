@@ -522,6 +522,7 @@ if __name__ == '__main__':
                     fixed_budgets = deepcopy(revised_budgets)
                     for o_budget in original_budgets:
                         o_range = o_budget["time_range"]
+                        overlap_checks = False
                         for r_budget in revised_budgets:
                             r_range = r_budget["time_range"]
                             inner_overlap = (o_range["start"] >= r_range["start"]) and (o_range["end"] <= r_range["end"])
@@ -529,8 +530,10 @@ if __name__ == '__main__':
                             start_overlap = (o_range["start"] >= r_range["start"]) and  (o_range["start"] <= r_range["end"])
                             end_overlap = (o_range["end"] >= r_range["start"]) and (o_range["end"] <= r_range["end"])
                             any_overlap = any([inner_overlap, outer_overlap, start_overlap, end_overlap])
-                            if not any_overlap:
-                                fixed_budgets.append(o_budget)
+                            if any_overlap:
+                                overlap_checks = True
+                        if not overlap_checks:
+                            fixed_budgets.append(o_budget)
                 for fixed_budget in fixed_budgets:
                     b_year = fixed_budget["time_range"]["start"].year
                     b_value_usd = fixed_budget["b_value_usd"]
