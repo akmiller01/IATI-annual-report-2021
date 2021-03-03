@@ -171,6 +171,7 @@ if __name__ == '__main__':
                     if code is not None:
                         activity_recipient_country_codes.append(code)
                         activity_recipient_country_percentages.append(percentage)
+                activity_recipient_regions = activity.findall("recipient-region")
 
                 # Humanitarian flag
                 humanitarian_flag = default_first(activity.xpath("@humanitarian"))
@@ -336,7 +337,6 @@ if __name__ == '__main__':
                             transaction_recipient_country_codes.append(code)
                             transaction_recipient_country_percentages.append(percentage)
                     if len(transaction_recipient_country_codes) == 0:
-                        activity_recipient_regions = activity.findall("recipient-region")
                         transaction_recipient_regions = transaction.findall("recipient-region")
                         if len(activity_recipient_country_codes) == 0:
                             if len(activity_recipient_regions) > 0 or len(transaction_recipient_regions) > 0:
@@ -518,7 +518,10 @@ if __name__ == '__main__':
                         else:
                             b_total_by_year[b_year] = b_value_usd
                         if len(activity_recipient_country_codes) == 0:
-                            budget_recipient_country_codes = ["MIS"]
+                            if len(activity_recipient_regions) == 0:
+                                budget_recipient_country_codes = ["MIS"]
+                            else:
+                                budget_recipient_country_codes = ["REG"]
                             budget_recipient_country_percentages = [100.0]
                         else:
                             budget_recipient_country_codes = activity_recipient_country_codes
