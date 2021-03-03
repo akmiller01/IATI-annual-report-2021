@@ -1,4 +1,4 @@
-list.of.packages <- c("data.table","openxlsx","ggplot2","scales")
+list.of.packages <- c("data.table","openxlsx","ggplot2","scales","jsonlite")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 lapply(list.of.packages, require, character.only=T)
@@ -15,6 +15,8 @@ for(env_var in ls()){
 }
 
 load("indicators_feb_22_2021_3.RData")
+
+py_json = fromJSON("indicators_feb_22_2021.json")
 
 billion = 1000000000
 trillion = billion * 1000

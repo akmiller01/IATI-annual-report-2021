@@ -1,0 +1,3 @@
+lxml
+progressbar2
+py-dateutil

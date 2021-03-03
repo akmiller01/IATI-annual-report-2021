@@ -57,4 +57,6 @@ for(this.cc in unique(wdat$cc)){
   ex_list[[this.cc]] = sub_list
 }
 
+ex_json  = toJSON(ex_list, auto_unbox=T)
+write(ex_json,"ex_rates.json")
 fwrite(wdat[,c("year","cc","ex.rate"),with=F],"ex_rates.csv")
