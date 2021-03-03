@@ -52,6 +52,27 @@ def convert_usd(value, year, currency, ratedf):
     except KeyError:
         return None
 
+
+def destroy_tree(tree):
+    root = tree.getroot()
+
+    node_tracker = {root: [0, None]}
+
+    for node in root.iterdescendants():
+        parent = node.getparent()
+        node_tracker[node] = [node_tracker[parent][0] + 1, parent]
+
+    node_tracker = sorted([(depth, parent, child) for child, (depth, parent)
+                           in node_tracker.items()], key=lambda x: x[0], reverse=True)
+
+    for _, parent, child in node_tracker:
+        if parent is None:
+            break
+        parent.remove(child)
+
+    del tree
+
+
 if __name__ == '__main__':
     with open('ex_rates.json') as f:
         ratedf = json.load(f)
@@ -113,7 +134,8 @@ if __name__ == '__main__':
             print(file_count, " - ", filename)
             filepath = os.path.join(subdir, filename)
             try:
-                root = etree.parse(filepath, parser=large_parser).getroot()
+                tree = etree.parse(filepath, parser=large_parser)
+                root =  tree.getroot()
             except etree.XMLSyntaxError:
                 continue
 
@@ -541,6 +563,7 @@ if __name__ == '__main__':
                                         recipient_budget_2021[recip_code] = dict()
                                         recipient_budget_2021[recip_code][reporting_org_ref] = b_value_usd_split_recip
 
+            destroy_tree(tree)
             for varname in dir():
                 if varname not in mem_keep_vars:
                     del globals()[varname]
