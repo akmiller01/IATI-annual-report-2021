@@ -484,7 +484,7 @@ if __name__ == '__main__':
                             b_currency = b_currency.replace(" ", "").upper()
 
                         if b_value is not None and b_currency is not None and b_year is not None:
-                            b_value_usd = convert_usd(t_value, t_year, t_currency, ratedf)
+                            b_value_usd = convert_usd(b_value, b_year, b_currency, ratedf)
                             tmp_meta = {"time_range": time_range, "b_value_usd": b_value_usd}
                             if budget_type == "1":
                                 original_budgets.append(tmp_meta)
