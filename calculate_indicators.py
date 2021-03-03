@@ -1,3 +1,4 @@
+from copy import deepcopy
 import datetime
 from dateutil import parser
 import gc
@@ -514,11 +515,11 @@ if __name__ == '__main__':
                                 revised_budgets.append(tmp_meta)
                 fixed_budgets = []
                 if len(original_budgets) == 0:
-                    fixed_budgets = revised_budgets
+                    fixed_budgets = deepcopy(revised_budgets)
                 elif len(revised_budgets) == 0:
-                    fixed_budgets = original_budgets
+                    fixed_budgets = deepcopy(original_budgets)
                 else:
-                    fixed_budgets = revised_budgets
+                    fixed_budgets = deepcopy(revised_budgets)
                     for o_budget in original_budgets:
                         o_range = o_budget["time_range"]
                         for r_budget in revised_budgets:
@@ -527,7 +528,7 @@ if __name__ == '__main__':
                             outer_overlap = (r_range["start"] >= o_range["start"]) and (r_range["end"] <= o_range["end"])
                             start_overlap = (o_range["start"] >= r_range["start"]) and  (o_range["start"] <= r_range["end"])
                             end_overlap = (o_range["end"] >= r_range["start"]) and (o_range["end"] <= r_range["end"])
-                            any_overlap = any([inner_overlap, outer_overlap, start_overlap, end_overlap, False])
+                            any_overlap = any([inner_overlap, outer_overlap, start_overlap, end_overlap])
                             if not any_overlap:
                                 fixed_budgets.append(o_budget)
                 for fixed_budget in fixed_budgets:
