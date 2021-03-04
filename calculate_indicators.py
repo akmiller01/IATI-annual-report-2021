@@ -163,7 +163,7 @@ if __name__ == '__main__':
                     code = attribs['code'] if 'code' in attrib_keys else None
                     if code is not None:
                         if len(code) == 5 and vocab == "":
-                            vocab == "1"
+                            vocab = "1"
                         if vocab == "2":
                             activity_sector_codes.append(code)
                             activity_sector_percentages.append(percentage)
@@ -330,7 +330,7 @@ if __name__ == '__main__':
                         code = attribs['code'] if 'code' in attrib_keys else None
                         if code is not None:
                             if len(code) == 5 and vocab == "":
-                                vocab == "1"
+                                vocab = "1"
                             if vocab == "2":
                                 transaction_sector_codes.append(code)
                                 transaction_sector_percentages.append(percentage)
