@@ -197,6 +197,7 @@ if __name__ == '__main__':
                         activity_recipient_country_codes.append(code)
                         activity_recipient_country_percentages.append(percentage)
                 activity_recipient_regions = activity.findall("recipient-region")
+                activity_recipient_regions = [reg for reg in activity_recipient_regions if 'code' in list(reg.attrib.keys()) and reg.attrib['code'] != '998']
 
                 # Humanitarian flag
                 humanitarian_flag = default_first(activity.xpath("@humanitarian"))
@@ -365,6 +366,7 @@ if __name__ == '__main__':
                             transaction_recipient_country_percentages.append(percentage)
                     if len(transaction_recipient_country_codes) == 0:
                         transaction_recipient_regions = transaction.findall("recipient-region")
+                        transaction_recipient_regions = [reg for reg in transaction_recipient_regions if 'code' in list(reg.attrib.keys()) and reg.attrib['code'] != '998']
                         if len(activity_recipient_country_codes) == 0:
                             if len(activity_recipient_regions) > 0 or len(transaction_recipient_regions) > 0:
                                 transaction_recipient_country_codes = ["REG"]
