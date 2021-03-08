@@ -610,5 +610,5 @@ if __name__ == '__main__':
         "recipient_budget_2021": recipient_budget_2021,
         "org_type_spend_2020": org_type_spend_2020
     }
-    with open("output/indicators_feb_22_2021.json", "w") as outfile:
+    with open("output/indicators_feb_22_2021_2.json", "w") as outfile:
         json.dump(write_obj, outfile)

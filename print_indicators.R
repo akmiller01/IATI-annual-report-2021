@@ -14,7 +14,7 @@ for(env_var in ls()){
   rm(list=env_var)
 }
 
-py_json = fromJSON("indicators_feb_22_2021.json")
+py_json = fromJSON("indicators_feb_22_2021_2.json")
 for(json_name in names(py_json)){
   assign(json_name, py_json[[json_name]])
 }
