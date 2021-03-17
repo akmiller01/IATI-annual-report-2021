@@ -95,6 +95,7 @@ length(setdiff(unique_iati_identifiers_2019,unique_iati_identifiers))
 a_count_sdg = stack(a_count_by_sdg)
 setnames(a_count_sdg,"ind","sdg")
 setnames(a_count_sdg,"values","activities")
+a_count_sdg = a_count_sdg[,c("sdg","activities")]
 a_count_sdg = a_count_sdg[order(-a_count_sdg$activities),]
 fwrite(a_count_sdg,"activities_count_by_sdg.csv")
 
