@@ -106,6 +106,7 @@ if __name__ == '__main__':
     activity_using_sdg_vocab_count = 0
     publishers_using_sdg_vocabs = list()
     unique_sdg_goals = list()
+    a_count_by_sdg = dict()
     unique_sdg_targets = list()
     a_count_by_year = dict()
     transaction_count = dict()
@@ -301,6 +302,10 @@ if __name__ == '__main__':
                         using_sdg_tag = True
                         if code is not None:
                             if vocab == "2":
+                                if code in a_count_by_sdg.keys():
+                                    a_count_by_sdg[code] = a_count_by_sdg[code] + 1
+                                else:
+                                    a_count_by_sdg[code] = 1
                                 if code not in unique_sdg_goals:
                                     unique_sdg_goals.append(code)
                             elif vocab == "3":
@@ -596,6 +601,7 @@ if __name__ == '__main__':
         "activity_using_sdg_vocab_count": activity_using_sdg_vocab_count,
         "publishers_using_sdg_vocabs": publishers_using_sdg_vocabs,
         "unique_sdg_goals": unique_sdg_goals,
+        "a_count_by_sdg": a_count_by_sdg,
         "unique_sdg_targets": unique_sdg_targets,
         "a_count_by_year": a_count_by_year,
         "transaction_count": transaction_count,
