@@ -291,6 +291,7 @@ if __name__ == '__main__':
                         r_org_by_year[start_year].append(reporting_org_ref)
 
                 # SDG tags
+                activity_sdg_allocation = dict() # One per activity per goal
                 tags = activity.findall("tag")
                 using_sdg_tag = False
                 for tag in tags:
@@ -302,10 +303,13 @@ if __name__ == '__main__':
                         using_sdg_tag = True
                         if code is not None:
                             if vocab == "2":
-                                if code in a_count_by_sdg.keys():
-                                    a_count_by_sdg[code] = a_count_by_sdg[code] + 1
+                                if code not in activity_sdg_allocation.keys():
+                                    if code in a_count_by_sdg.keys():
+                                        a_count_by_sdg[code] = a_count_by_sdg[code] + 1
+                                    else:
+                                        a_count_by_sdg[code] = 1
                                 else:
-                                    a_count_by_sdg[code] = 1
+                                    activity_sdg_allocation[code] = 1
                                 if code not in unique_sdg_goals:
                                     unique_sdg_goals.append(code)
                             elif vocab == "3":
