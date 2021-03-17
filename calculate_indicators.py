@@ -121,7 +121,7 @@ if __name__ == '__main__':
     recipient_budget_2021 = dict()
     org_type_spend_2020 = dict()
 
-    rootdir = '/home/alex/git/IATI-Registry-Refresher/data'
+    rootdir = '/home/alex/git/IATI-Registry-Refresher/data_2020'
 
     mem_keep_vars = dir()
     mem_keep_vars.append("mem_keep_vars")
