@@ -1,3 +1,4 @@
+import argparse
 from copy import deepcopy
 import datetime
 from dateutil import parser
@@ -75,6 +76,10 @@ def destroy_tree(tree):
 
 
 if __name__ == '__main__':
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('year', type=str)
+    args = arg_parser.parse_args()
+
     with open('ex_rates.json') as f:
         ratedf = json.load(f)
     ratedf["BEF"] = ratedf["EUR"]
@@ -121,7 +126,7 @@ if __name__ == '__main__':
     recipient_budget_2021 = dict()
     org_type_spend_2020 = dict()
 
-    rootdir = '/home/alex/git/IATI-Registry-Refresher/data_2020'
+    rootdir = '/home/alex/git/IATI-Registry-Refresher/data_{}'.format(args.year)
 
     mem_keep_vars = dir()
     mem_keep_vars.append("mem_keep_vars")
@@ -620,5 +625,5 @@ if __name__ == '__main__':
         "recipient_budget_2021": recipient_budget_2021,
         "org_type_spend_2020": org_type_spend_2020
     }
-    with open("output/indicators_feb_22_2021_2.json", "w") as outfile:
+    with open("output/indicators_{}.json".format(args.year), "w") as outfile:
         json.dump(write_obj, outfile)
