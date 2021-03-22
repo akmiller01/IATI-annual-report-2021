@@ -5,7 +5,12 @@ lapply(list.of.packages, require, character.only=T)
 rm(list.of.packages,new.packages)
 
 setwd("~/git/IATI-annual-report-2021/output")
-load("indicators_feb_22_2020_2.RData")
+
+py_json = fromJSON("indicators_2019.json")
+
+for(json_name in names(py_json)){
+  assign(json_name, py_json[[json_name]])
+}
 
 rm(org_type_spend_2020,recipient_budget_2021,recipient_spend_2020,sector_spend_2020)
 for(env_var in ls()){
@@ -14,7 +19,7 @@ for(env_var in ls()){
   rm(list=env_var)
 }
 
-py_json = fromJSON("indicators_feb_22_2021_2.json")
+py_json = fromJSON("indicators_2020.json")
 for(json_name in names(py_json)){
   assign(json_name, py_json[[json_name]])
 }
@@ -119,12 +124,6 @@ unique_sdg_targets[order(unique_sdg_targets)]
 unique_sdg_targets_2019[order(unique_sdg_targets_2019)]
 length(unique_sdg_targets) - length(unique_sdg_targets_2019)
 
-# SDG vocabs
-activity_using_sdg_vocab_count
-activity_using_sdg_vocab_count - activity_using_sdg_vocab_count_2019
-length(publishers_using_sdg_vocabs)
-length(setdiff(publishers_using_sdg_vocabs, publishers_using_sdg_vocabs_2019))
-
 # Humanitarian scope types
 humanitarian_scope_emergency_count
 humanitarian_scope_emergency_count - humanitarian_scope_emergency_count_2019
@@ -202,6 +201,15 @@ recipient_spend = recipient_spend_disagg[,.(spend=sum(spend,na.rm=T)),by=.(recip
 recipient_spend = recipient_spend[order(-recipient_spend$spend),]
 recipient_spend = recipient_spend[,c("recipient_name","spend")]
 fwrite(recipient_spend,"recipient_spend_2020.csv")
+
+# Hum by recip
+a_count_hum = stack(humanitarian_activity_count_by_recipient)
+setnames(a_count_hum,"ind","recipient_code")
+setnames(a_count_hum,"values","activities")
+a_count_hum = merge(a_count_hum,recipients,by="recipient_code")
+a_count_hum = a_count_hum[,c("recipient_name","activities")]
+a_count_hum = a_count_hum[order(-a_count_hum$activities),]
+fwrite(a_count_hum,"humanitarian_activities_count_by_recipient.csv")
 
 # 2021 budget by recipient
 recipient_budget_stack = lapply(recipient_budget_2021, stack)
