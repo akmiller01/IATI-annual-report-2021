@@ -114,6 +114,7 @@ if __name__ == '__main__':
     r_org_by_type = dict()
     activity_count = 0
     humanitarian_activity_count = 0
+    humanitarian_activity_count_by_recipient = dict()
     humanitarian_scope_emergency_count = 0
     humanitarian_scope_appeal_count = 0
     unique_emergencies = list()
@@ -228,6 +229,11 @@ if __name__ == '__main__':
                 humanitarian_flag = default_first(activity.xpath("@humanitarian"))
                 if humanitarian_flag in ["1", "true", True]:
                     humanitarian_activity_count = humanitarian_activity_count + 1
+                    for activity_recipient_code in activity_recipient_country_codes:
+                        if activity_recipient_code in humanitarian_activity_count_by_recipient.keys():
+                            humanitarian_activity_count_by_recipient[activity_recipient_code] = humanitarian_activity_count_by_recipient[activity_recipient_code] + 1
+                        else:
+                            humanitarian_activity_count_by_recipient[activity_recipient_code] = 1
 
                 # Humanitarian scope
                 using_hs_etype = False
@@ -640,6 +646,7 @@ if __name__ == '__main__':
         "r_org_by_type": r_org_by_type,
         "activity_count": activity_count,
         "humanitarian_activity_count": humanitarian_activity_count,
+        "humanitarian_activity_count_by_recipient": humanitarian_activity_count_by_recipient,
         "humanitarian_scope_emergency_count": humanitarian_scope_emergency_count,
         "humanitarian_scope_appeal_count": humanitarian_scope_appeal_count,
         "unique_emergencies": unique_emergencies,
