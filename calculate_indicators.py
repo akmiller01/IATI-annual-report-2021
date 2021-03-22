@@ -10,6 +10,18 @@ import os
 import progressbar
 
 
+def to_sdg_goal(x):
+    split_x = str(x).split(".")
+    goal = split_x[0]
+    try:
+        goal_int = int(goal)
+    except ValueError:
+        return None
+    if goal_int >= 1 and goal_int <= 17:
+        return goal
+    return None
+
+
 def safe_float(x):
     try:
         return float(x)
@@ -108,8 +120,6 @@ if __name__ == '__main__':
     unique_appeals = list()
     activity_using_sdg_count = 0
     publishers_using_sdgs = list()
-    activity_using_sdg_vocab_count = 0
-    publishers_using_sdg_vocabs = list()
     unique_sdg_goals = list()
     a_count_by_sdg = dict()
     unique_sdg_targets = list()
@@ -152,6 +162,8 @@ if __name__ == '__main__':
                 activity = root.xpath('iati-activity[%s]' % (i + 1))[0]
                 activity_count = activity_count + 1
 
+                activity_sdg_allocation = dict() # One per activity per goal
+
                 # Activity sectors
                 activity_sector_codes = []
                 activity_sector_percentages = []
@@ -179,6 +191,13 @@ if __name__ == '__main__':
                         else:
                             if vocab in ["7", "8", "9"]:
                                 using_sdg_vocab = True
+                                goal = to_sdg_goal(code)
+                                if goal and goal not in activity_sdg_allocation.keys():
+                                    activity_sdg_allocation[goal] = 1
+                                    if goal in a_count_by_sdg.keys():
+                                        a_count_by_sdg[goal] = a_count_by_sdg[goal] + 1
+                                    else:
+                                        a_count_by_sdg[goal] = 1
                             non_oecd_sectors = True
                 if len(activity_sector_codes) == 0:
                     if non_oecd_sectors:
@@ -296,7 +315,6 @@ if __name__ == '__main__':
                         r_org_by_year[start_year].append(reporting_org_ref)
 
                 # SDG tags
-                activity_sdg_allocation = dict() # One per activity per goal
                 tags = activity.findall("tag")
                 using_sdg_tag = False
                 for tag in tags:
@@ -309,21 +327,34 @@ if __name__ == '__main__':
                         if code is not None:
                             if vocab == "2":
                                 if code not in activity_sdg_allocation.keys():
+                                    activity_sdg_allocation[code] = 1
                                     if code in a_count_by_sdg.keys():
                                         a_count_by_sdg[code] = a_count_by_sdg[code] + 1
                                     else:
                                         a_count_by_sdg[code] = 1
-                                else:
-                                    activity_sdg_allocation[code] = 1
                                 if code not in unique_sdg_goals:
                                     unique_sdg_goals.append(code)
                             elif vocab == "3":
                                 if code not in unique_sdg_targets:
                                     unique_sdg_targets.append(code)
-                if using_sdg_tag:
-                    activity_using_sdg_count = activity_using_sdg_count + 1
-                    if reporting_org_ref is not None and reporting_org_ref not in publishers_using_sdgs:
-                        publishers_using_sdgs.append(reporting_org_ref)
+
+                # SDG indicators
+                using_sdg_result = False
+                indicator_references = activity.xpath("result/indicator/reference")
+                for indicator_reference in indicator_references:
+                    attribs = indicator_reference.attrib
+                    attrib_keys = list(attribs.keys())
+                    vocab = attribs['vocabulary'] if 'vocabulary' in attrib_keys else None
+                    code = attribs['code'] if 'code' in attrib_keys else None
+                    if vocab == "9":
+                        using_sdg_result = True
+                        goal = to_sdg_goal(code)
+                        if goal and goal not in activity_sdg_allocation.keys():
+                            activity_sdg_allocation[goal] = 1
+                            if goal in a_count_by_sdg.keys():
+                                a_count_by_sdg[goal] = a_count_by_sdg[goal] + 1
+                            else:
+                                a_count_by_sdg[goal] = 1
 
                 # Transactions
                 transactions = activity.findall("transaction")
@@ -355,6 +386,13 @@ if __name__ == '__main__':
                             else:
                                 if vocab in ["7", "8", "9"]:
                                     using_sdg_vocab = True
+                                    goal = to_sdg_goal(code)
+                                    if goal and goal not in activity_sdg_allocation.keys():
+                                        activity_sdg_allocation[goal] = 1
+                                        if goal in a_count_by_sdg.keys():
+                                            a_count_by_sdg[goal] = a_count_by_sdg[goal] + 1
+                                        else:
+                                            a_count_by_sdg[goal] = 1
                                 non_oecd_sectors = True
                     if len(transaction_sector_codes) == 0:
                         if non_oecd_sectors:
@@ -483,10 +521,10 @@ if __name__ == '__main__':
                                         else:
                                             recipient_spend_2020[recip_code] = dict()
                                             recipient_spend_2020[recip_code][reporting_org_ref] = t_value_usd_split_recip
-                if using_sdg_vocab:
-                    activity_using_sdg_vocab_count = activity_using_sdg_vocab_count + 1
-                    if reporting_org_ref is not None and reporting_org_ref not in publishers_using_sdg_vocabs:
-                        publishers_using_sdg_vocabs.append(reporting_org_ref)
+                if using_sdg_tag or using_sdg_vocab or using_sdg_result:
+                    activity_using_sdg_count = activity_using_sdg_count + 1
+                    if reporting_org_ref is not None and reporting_org_ref not in publishers_using_sdgs:
+                        publishers_using_sdgs.append(reporting_org_ref)
                 for transaction_a_count_year in transaction_a_count_years:
                     if transaction_a_count_year in a_count_with_transaction_by_year.keys():
                         a_count_with_transaction_by_year[transaction_a_count_year] = a_count_with_transaction_by_year[transaction_a_count_year] + 1
@@ -593,6 +631,7 @@ if __name__ == '__main__':
                     del globals()[varname]
 
             gc.collect()
+
     # Write
     write_obj = {
         "unique_reporting_orgs": unique_reporting_orgs,
@@ -607,8 +646,6 @@ if __name__ == '__main__':
         "unique_appeals": unique_appeals,
         "activity_using_sdg_count": activity_using_sdg_count,
         "publishers_using_sdgs": publishers_using_sdgs,
-        "activity_using_sdg_vocab_count": activity_using_sdg_vocab_count,
-        "publishers_using_sdg_vocabs": publishers_using_sdg_vocabs,
         "unique_sdg_goals": unique_sdg_goals,
         "a_count_by_sdg": a_count_by_sdg,
         "unique_sdg_targets": unique_sdg_targets,
